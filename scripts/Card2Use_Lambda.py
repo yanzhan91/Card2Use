@@ -1,7 +1,7 @@
 from __future__ import print_function
+from boto3.dynamodb.conditions import Key
 
 import boto3
-import json
 
 print('Loading function')
 
@@ -33,11 +33,18 @@ def calc_rewards(card_info, domain, category):
 
 def handler(event, context):
 
-    domain = event['domain']
+    print(event)
+
+    # domain = event['domain']
     user_id = event['user_id']
 
+    if 'domain' in event and event['domain']:
+        domain = event['domain']
+    else:
+        domain = get_domain_from_name(event)
+
     # Get Category
-    if 'category' in event:
+    if 'category' in event and event['category']:
         category = event['category']
     else:
         domain_table = boto3.resource('dynamodb').Table('Card2Use_Domains')
@@ -51,5 +58,30 @@ def handler(event, context):
     card_list = map(lambda x: get_card_info(x), card_list)
     card_list = list(map(lambda x: calc_rewards(x, domain, category), card_list))
 
-    return json.dumps(card_list)
+    # Sort
+    card_list.sort(key=lambda x: x['reward'], reverse=True)
 
+    print(card_list)
+
+    return card_list
+
+
+def get_domain_from_name(event):
+    domain_table = boto3.resource('dynamodb').Table('Card2Use_Domains')
+    domain_items = domain_table.query(
+        IndexName='name-index',
+        KeyConditionExpression=Key('name').eq(event['name']),
+        Limit=1
+    )['Items']
+    if not domain_items:
+        raise Exception
+    return domain_items[0]['domain']
+
+
+# if __name__ == "__main__":
+#     event = {
+#         'user_id': 10001,
+#         'domain': 'jewelosco.com',
+#         # 'name': 'Jewel Osco'
+#     }
+#     handler(event, None)
