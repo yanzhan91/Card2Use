@@ -35,7 +35,6 @@ def handler(event, context):
 
     print(event)
 
-    # domain = event['domain']
     user_id = event['user_id']
 
     if 'domain' in event and event['domain']:
@@ -79,9 +78,9 @@ def get_domain_from_name(event):
 
 
 # if __name__ == "__main__":
-#     event = {
-#         'user_id': 10001,
+#     mock_event = {
+#         'user_id': '10001',
 #         'domain': 'jewelosco.com',
 #         # 'name': 'Jewel Osco'
 #     }
-#     handler(event, None)
+#     handler(mock_event, None)
